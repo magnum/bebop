@@ -6,6 +6,10 @@ Connect to the Bebop's WiFi network, then:
 
     $ telnet 192.168.42.1
 
+## FTP
+
+There's an FTP server running on the normal port with no username or password, which provides access to everything under `/data/ftp`, which includes media (JPEGs, DNGs, videos), PUDs, logs, black box recordings and more.
+
 ## Networking
 
 The drone and controller seem to interact via two ports:
@@ -84,6 +88,74 @@ You'll see one NMEA stanza per second, for example:
     -M                   Machine friendly (all data on one line)
     -m                   if us is activated  > 1 : low_power mode > 0 : high_power mode
     
+## PUD files (flight recordings)
+
+The drone records every flight as a single file in `/data/ftp/internal_000/Bebop_Drone/academy`.
+
+The file format is self-describing. Each file begins with a null-terminated JSON string listing the columns present in each data packet. For example (pretty-printed here for clarity):
+
+    {
+      "version": "1.0",
+      "date": "2014-11-30T160423+0000",
+      "product_id": 2305,
+      "serial_number": "PI...",
+      "uuid": "EB...",
+      "controller_model": "manta",
+      "controller_application": "Nexus 10",
+      "run_origin": 0,
+      "details_headers": [
+        {
+          "name": "time",
+          "type": "integer",
+          "size": 4
+        },
+        {
+          "name": "battery_level",
+          "type": "integer",
+          "size": 4
+        },
+        {
+          "name": "controller_gps_longitude",
+          "type": "double",
+          "size": 8
+        },
+        {
+          "name": "controller_gps_latitude",
+          "type": "double",
+          "size": 8
+        }, ...
+      ]
+    }
+
+This JSON header is followed by fixed-size binary packets, through to the end of the file. There are roughly 30 packets per second.
+
+The fields currently present in the log packets are:
+
+|Name|Type|Size|Description|
+|:---|:---|:---|---|
+|time|integer|4|Timestamp of the log entry, in milliseconds|
+|battery_level|integer|4|Battery level, in percent|
+|controller_gps_longitude|double|8|Controller GPS longitude, in degrees|
+|controller_gps_latitude|double|8|Controller GPS latitude, in degrees|
+|flying_state|integer|1|Flying state: 1 = landed, 2 = in the air, 3 = in the air|
+|alert_state|integer|1|Alert state: 0 = normal|
+|wifi_signal|integer|1|WiFi signal strength, always 0 right now|
+|product_gps_available|boolean|1|Bebop GPS availability, always 0 right now|
+|product_gps_longitude|double|8|BeBop GPS longitude, in degrees|
+|product_gps_latitude|double|8|BeBop GPS latitude, in degrees|
+|product_gps_position_error|integer|4|BeBop GPS position error, always 0 right now|
+|speed_vx|float|4|Horizontal speed, unknown units|
+|speed_vy|float|4|Horizontal speed, unknown units|
+|speed_vz|float|4|Vertical speed, unknown units|
+|angle_phi|float|4|Euler angle phi, likely in radians|
+|angle_theta|float|4|Euler angle theta, likely in radians|
+|angle_psi|float|4|Euler angle psi, likely in radians|
+|altitude|integer|4|Altitude, likely in centimeters|
+|flip_type|integer|1|Flip type, 0 = no flip|
+
+A quick way to dump the data as a table from the shell is to run:
+
+    hexdump -s 1379 -e ' "%07_ad|" 2/4 "%8d" 2/8 "%13.7f" 4/1 "%2d" 2/8 "%13.7f " 1/4 "%4d" 6/4 "%12.5f" 1/4 "%6d" 1/1 "%3d" "\n" ' *.pud | more
 
 ## Debug Mode
 
