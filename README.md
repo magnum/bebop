@@ -157,6 +157,14 @@ A quick way to dump the data as a table from the shell is to run:
 
     hexdump -s 1379 -e ' "%07_ad|" 2/4 "%8d" 2/8 "%13.7f" 4/1 "%2d" 2/8 "%13.7f " 1/4 "%4d" 6/4 "%12.5f" 1/4 "%6d" 1/1 "%3d" "\n" ' *.pud | more
 
+This repository contains a Python script to convert .pud files into .csv and .kml files (for Google Earth). For .kml support, you'll need the `simplekml` package, which can be installed trivially using `easy_install simplekml`. To convert a single .pud file:
+
+    ./pud_to_csv_kml.py 0901_2014-12-01T162824+0000_F88751.pud
+
+To convert all the .pud files in a directory:
+
+    ./pud_to_csv_kml.py /path/to/directory
+
 ## Debug Mode
 
 Run `/usr/bin/DragonDebug.sh` to enable debug mode.
