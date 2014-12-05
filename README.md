@@ -163,8 +163,45 @@ This repository contains a Python script to convert .pud files into .csv and .km
 
 To convert all the .pud files in a directory:
 
-    ./pud_to_csv_kml.py /path/to/directory
+    ./pud_to_csv_kml.py -d /path/to/directory
 
 ## Debug Mode
 
 Run `/usr/bin/DragonDebug.sh` to enable debug mode.
+
+## Black Box Recordings
+
+To turn on blackbox recordings, edit `/etc/debug.conf` and set the blackbox flag to `true`. The Bebop will then write one file per flight to `/data/ftp/internal_000/blackbox`. The files are named `light_run_*`. The format is as follows.
+
+The files start with an ASCII header, which contains two sections. The first records the firmware version:
+
+    -- Build infos
+    product:  BebopDrone
+    name:     BebopDrone-K...
+    version:  1.32.0
+    date:     2014-11-14
+    time:     10h35m59s
+    compiler: marjoriecoulin
+
+The second lists the columns present in the recording:
+
+    -- Navdata infos
+    nentries: 129
+    datasize: 8
+    titles: index, time_s, sensor_acc_raw_x_m_s2, sensor_acc_raw_y_m_s2, sensor_acc_raw_z_m_s2, sensor_gyro_raw_x_rad_s, sensor_gyro_raw_y_rad_s, sensor_gyro_raw_z_rad_s, sensor_mag_raw_x_mG, sensor_mag_raw_y_mG, sensor_mag_raw_z_mG, phi_EST_rad, theta_EST_rad, psi_EST_rad, gyro_filt_x_rad_s, gyro_filt_y_rad_s, gyro_filt_z_rad_s, p_EST_rad_s, q_EST_rad_s, r_EST_rad_s, acc_x_EST_m_s2, acc_y_EST_m_s2, acc_z_EST_m_s2, speed_horiz_x_m_s, speed_horiz_y_m_s, speed_horiz_z_m_s, sensor_ultrasound_height_m, sensor_pressure_Pa, height_EST_m, height_vision_m, sensor_vision_speed_x_m_s, sensor_vision_speed_y_m_s, sensor_vision_speed_z_m_s, phi_REF_rad, theta_REF_rad, psi_REF_rad, p_REF_rad_s, q_REF_rad_s, r_REF_rad_s, r_wanted_rad_s, motor_cmd_pitch, motor_cmd_roll, motor_cmd_yaw, height_REF_m, height_REF_filt_m, speed_z_REF_m_s, motor_cmd_height, motor_cmd_ff, motor_cmd_1_rpm, motor_cmd_2_rpm, motor_cmd_3_rpm, motor_cmd_4_rpm, controler_state, acc_bias_x_m_s2, acc_bias_y_m_s2, acc_bias_z_m_s2, gyro_bias_x_rad_s, gyro_bias_y_rad_s, gyro_bias_z_rad_s, gyro_unbias_x_rad_s, gyro_unbias_y_rad_s, gyro_unbias_z_rad_s, speed_body_x_m_s, speed_body_y_m_s, speed_body_z_m_s, sensor_imu_ref_temperature_degC, sensor_imu_obs_temperature_degC, sensor_barometer_temperature_degC, battery_dV, motor1_obs_speed_rpm, motor2_obs_speed_rpm, motor3_obs_speed_rpm, motor4_obs_speed_rpm, BLDC_error, BLDC_motors_fault, BLDC_status, BLDC_temperature_degC, calage_x_rad, calage_y_rad, biais_pression_m, use_US, estimator_drone_position_m_x, estimator_drone_position_m_y, estimator_drone_position_m_z, estimator_psi_fused_rad, sensor_ultrasound_id, vision_indicator, sensor_ultrasound_mode, magneto_bias_x, magneto_bias_y, magneto_bias_z, magneto_radius, sensor_gps_flags, sensor_gps_latitude_deg, sensor_gps_longitude_deg, sensor_gps_altitude_m, sensor_gps_speed_m_s, sensor_gps_bearing_deg, sensor_gps_accuracy, sensor_gps_num_svs, sensor_gps_used_in_fix_mask, heading_magneto_rad, magneto_calibration_state, altitude_pression_m, altitude_pression_filt_m, dynamic_model_b, dynamic_model_f0, dynamic_model_Cz, dynamic_model_rpm_eq, psi_VIDEOREF_rad, airspeed_body_x_m_s, airspeed_body_y_m_s, airspeed_body_z_m_s, wind_body_x_m_s, wind_body_y_m_s, wind_body_z_m_s, stateFlightPlan, gpsDeviationPostionErrorLat_m, gpsDeviationPostionErrorLong_m, gpsDeviationPostionErrorAlt_m, gpsLatitudeRelative_m, gpsLongitudeRelative_m, gpsNorthSpeed_m_s, gpsEstSpeed_m_s, gpsDataOk, gpsNewValidData, battery_filt, magneticDeclination_rad, magneticDeclinationLocked
+
+There are currently 129 columns in the recordings, everything from raw sensor data to attitude, position and wind estimates, to motor commands.
+
+The data follows a data header:
+
+    -- Data
+
+Each packet contains `nentries` double floating point values, each `datasize` (8) bytes long.
+
+This repository contains a Python script to convert blackbox files into .csv files. To convert a single blackbox file:
+
+    ./blackbox_to_csv.py light_run_0
+
+To convert all the .pud files in a directory:
+
+    ./blackbox_to_csv.py -d /path/to/directory
