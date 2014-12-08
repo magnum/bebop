@@ -198,6 +198,8 @@ The data follows a data header:
 
 Each packet contains `nentries` double floating point values, each `datasize` (8) bytes long.
 
+The packets are logged at a rate of 200Hz.
+
 This repository contains a Python script to convert blackbox files into .csv files. To convert a single blackbox file:
 
     ./blackbox_to_csv.py light_run_0
