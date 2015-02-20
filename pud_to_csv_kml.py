@@ -113,7 +113,7 @@ def make_kml(reader):
 		coord.append( (
 			packet[reader.column_indices['product_gps_longitude']],
 			packet[reader.column_indices['product_gps_latitude']],
-			packet[reader.column_indices['altitude']] / 100.0 / 3.28,  # 100ths of a foot to meters
+			packet[reader.column_indices['altitude']] / 1000.0,  # millimeters to meters
 			) )
 
 	kml = simplekml.Kml()
