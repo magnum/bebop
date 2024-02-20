@@ -13,85 +13,85 @@ import struct
 
 
 class PUDFileReader(object):
-	def __init__(self, filename):
-		self.filename = filename
-		self._read_file()
+    def __init__(self, filename):
+        self.filename = filename
+        self._read_file()
 
-	def _read_file(self):
-		# Read the file.
-		contents = open(self.filename, 'rb').read()
+    def _read_file(self):
+        # Read the file.
+        contents = open(self.filename, 'rb').read()
 
-		# Extract the JSON header.
-		null_terminator_index = contents.index('\x00')
-		header_json = contents[:null_terminator_index]
-		packets = contents[null_terminator_index+1:]
+        # Extract the JSON header.
+        null_terminator_index = contents.index(b'\x00')
+        header_json = contents[:null_terminator_index]
+        packets = contents[null_terminator_index + 1:]
 
-		# Parse the header.
-		header = json.loads(header_json)
-		details_headers = header['details_headers']
+        # Parse the header.
+        header = json.loads(header_json)
+        details_headers = header['details_headers']
 
-		# Extract the column information.
-		self.columns = []
-		self.struct_format = '<'
-		self.packet_length = 0
-		self.column_indices = {}
-		for i, details_header in enumerate(details_headers):
-			detail_name = details_header['name']
-			detail_type = details_header['type']
-			detail_size = int(details_header['size'])
+        # Extract the column information.
+        self.columns = []
+        self.struct_format = '<'
+        self.packet_length = 0
+        self.column_indices = {}
+        for i, details_header in enumerate(details_headers):
+            detail_name = details_header['name']
+            detail_type = details_header['type']
+            detail_size = int(details_header['size'])
 
-			if detail_type == 'integer':
-				# assume signed
-				if detail_size == 1:
-					detail_format = 'b'
-				elif detail_size == 2:
-					detail_format = 'h'
-				elif detail_size == 4:
-					detail_format = 'i'
-				elif detail_size == 8:
-					detail_format = 'q'
-				else:
-					raise Exception('Unsupported integer size %d for field %s' % (detail_size, detail_name))
-			elif detail_type == 'boolean':
-				if detail_size == 1:
-					detail_format = '?'
-				else:
-					raise Exception('Unsupported boolean size %d for field %s' % (detail_size, detail_name))
-			elif detail_type == 'double':
-				if detail_size == 8:
-					detail_format = 'd'
-				else:
-					raise Exception('Unsupported double size %d for field %s' % (detail_size, detail_name))
-			elif detail_type == 'float':
-				if detail_size == 4:
-					detail_format = 'f'
-				else:
-					raise Exception('Unsupported float size %d for field %s' % (detail_size, detail_name))
-			else:
-				raise Exception('Unsupported detail type %s for field %s' % (detail_type, detail_name))
+            if detail_type == 'integer':
+                # assume signed
+                if detail_size == 1:
+                    detail_format = 'b'
+                elif detail_size == 2:
+                    detail_format = 'h'
+                elif detail_size == 4:
+                    detail_format = 'i'
+                elif detail_size == 8:
+                    detail_format = 'q'
+                else:
+                    raise Exception('Unsupported integer size %d for field %s' % (detail_size, detail_name))
+            elif detail_type == 'boolean':
+                if detail_size == 1:
+                    detail_format = '?'
+                else:
+                    raise Exception('Unsupported boolean size %d for field %s' % (detail_size, detail_name))
+            elif detail_type == 'double':
+                if detail_size == 8:
+                    detail_format = 'd'
+                else:
+                    raise Exception('Unsupported double size %d for field %s' % (detail_size, detail_name))
+            elif detail_type == 'float':
+                if detail_size == 4:
+                    detail_format = 'f'
+                else:
+                    raise Exception('Unsupported float size %d for field %s' % (detail_size, detail_name))
+            else:
+                raise Exception('Unsupported detail type %s for field %s' % (detail_type, detail_name))
 
-			self.columns.append( (detail_name, detail_type, detail_size, detail_format) )
-			self.struct_format += detail_format
-			self.packet_length += detail_size
+            self.columns.append((detail_name, detail_type, detail_size, detail_format))
+            self.struct_format += detail_format
+            self.packet_length += detail_size
 
-			self.column_indices[detail_name ] = i
+            self.column_indices[detail_name] = i
 
-		# Unpack the packets
-		self.packets = []
-		while len(packets) >= self.packet_length:
-			packet = packets[:self.packet_length]
-			packets = packets[self.packet_length:]
-			packet_fields = struct.unpack(self.struct_format, packet)
-			self.packets.append(packet_fields)
+        # Unpack the packets
+        self.packets = []
+        while len(packets) >= self.packet_length:
+            packet = packets[:self.packet_length]
+            packets = packets[self.packet_length:]
+            packet_fields = struct.unpack(self.struct_format, packet)
+            self.packets.append(packet_fields)
 
-		# TODO: warn if there is data left over
+        # TODO: warn if there is data left over
 
 
 def make_csv(reader):
 	f = reader.filename
 	if os.path.exists(f + '.csv'):
 		return
-	print 'Creating CSV file for %s' % (f,)
+	print('Creating CSV file for %s' % (f,))
 	c = open(f + '.csv', 'w')
 	c.write(','.join(c[0] for c in reader.columns) + '\n')
 	for packet in reader.packets:
@@ -105,7 +105,7 @@ def make_kml(reader):
 	f_kml = f + '.kml'
 	if os.path.exists(f_kml):
 		return
-	print 'Creating KML for %s' % (f,)
+	print('Creating KML for %s' % (f,))
 	coord = []
 	for packet in reader.packets:
 		if packet[reader.column_indices['product_gps_longitude']] == 0.0:
@@ -136,7 +136,7 @@ def main():
 		files = files + list(os.path.join(options.dir, f) for f in os.listdir(options.dir) if f.endswith('.pud'))
 
 	for filename in files:
-		print "Processing %s..." % (filename,)
+		print("Processing %s..." % (filename,))
 		reader = PUDFileReader(filename)
 		if options.kml:
 			make_kml(reader)
